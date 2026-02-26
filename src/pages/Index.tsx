@@ -23,6 +23,8 @@ export default function Index() {
   const [reportSuccess, setReportSuccess] = useState(false);
   const [reportType, setReportType] = useState<'flooding' | 'landslide'>('flooding');
 
+  const [pixCopied, setPixCopied] = useState(false);
+
   const loadPoints = async () => {
     setLoadingPoints(true);
     try { setPoints(await fetchPublicCollectionPoints()); }
@@ -80,12 +82,28 @@ export default function Index() {
             <p className="text-xs opacity-75">Juiz de Fora</p>
           </div>
 
-          <div className="bg-card border border-primary/30 rounded-xl px-4 py-3 shadow-sm min-w-[220px]">
+          <div
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText('contribua@pjf.mg.gov.br');
+                setPixCopied(true);
+                setTimeout(() => setPixCopied(false), 2000);
+              } catch (err) {
+                console.error('Erro ao copiar PIX', err);
+              }
+            }}
+            className="bg-card border border-primary/30 rounded-xl px-4 py-3 shadow-sm min-w-[220px] cursor-pointer hover:scale-[1.02] transition-all"
+          >
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Pix Oficial Prefeitura
             </p>
+
             <p className="font-bold text-primary mt-1 break-all">
-              contribua@pjf.mg.gov.br
+              {pixCopied ? '✅ PIX copiado!' : 'contribua@pjf.mg.gov.br'}
+            </p>
+
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Clique para copiar
             </p>
           </div>
 
@@ -176,6 +194,9 @@ export default function Index() {
 
         {tab === 'points' && (
           <>
+
+
+
             {/* BUSCA */}
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -186,6 +207,29 @@ export default function Index() {
                 placeholder="Buscar por nome, bairro ou endereço..."
                 className="w-full pl-9 pr-4 py-2.5 border border-input rounded-xl text-sm bg-card focus:outline-none focus:ring-2 focus:ring-ring"
               />
+            </div>
+
+            {/* INFO + PIX BANNER */}
+            <div className="bg-primary/10 border-b border-primary/20">
+              <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col sm:flex-row gap-4 justify-between">
+
+                <div className="text-sm text-foreground leading-relaxed">
+                  <p className="font-semibold mb-1">🤝 Ajude Juiz de Fora</p>
+                  <p>
+                    Aqui você pode encontrar pontos de coleta de doações para vítimas de
+                    desastres naturais em Juiz de Fora e suas maiores necessidades em tempo real.
+                    Se você souber de algum ponto que não está listado, ou se um ponto listado
+                    tiver alguma informação desatualizada, utilize os botões acima para reportar
+                    ou cadastrar pontos de coleta.
+                  </p>
+                  <p className="mt-2 font-medium">
+                    Juntos, podemos ajudar nossa comunidade a se recuperar mais rápido!
+                  </p>
+                </div>
+
+
+
+              </div>
             </div>
 
             {/* SUBTABS */}
