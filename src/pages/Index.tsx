@@ -62,8 +62,8 @@ export default function Index() {
         <div className="max-w-2xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-bold text-lg leading-tight">🆘 Defesa Civil JF</h1>
-              <p className="text-xs opacity-75">Juiz de Fora — Desastre Climático</p>
+              <h1 className="font-bold text-lg leading-tight">🆘 Ajude JF</h1>
+              <p className="text-xs opacity-75">Juiz de Fora</p>
             </div>
             <a
               href="https://www.climatempo.com.br/previsao-do-tempo/cidade/152/juizdefora-mg"
