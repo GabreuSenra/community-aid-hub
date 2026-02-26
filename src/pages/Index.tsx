@@ -74,50 +74,59 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background">
 
-      {/* HEADER */}
-      <header className="bg-primary text-primary-foreground sticky top-0 z-40 shadow-lg">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="font-bold text-lg leading-tight">🆘 Ajude JF</h1>
-            <p className="text-xs opacity-75">Juiz de Fora</p>
-          </div>
+      {/* HEADER RESPONSIVO */}
+<header className="bg-primary text-primary-foreground sticky top-0 z-40 shadow-lg">
+  <div className="max-w-2xl mx-auto px-4 py-3">
 
-          <div
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText('contribua@pjf.mg.gov.br');
-                setPixCopied(true);
-                setTimeout(() => setPixCopied(false), 2000);
-              } catch (err) {
-                console.error('Erro ao copiar PIX', err);
-              }
-            }}
-            className="bg-card border border-primary/30 rounded-xl px-4 py-3 shadow-sm min-w-[220px] cursor-pointer hover:scale-[1.02] transition-all"
-          >
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Pix Oficial Prefeitura
-            </p>
+    {/* Linha principal */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 
-            <p className="font-bold text-primary mt-1 break-all">
-              {pixCopied ? '✅ PIX copiado!' : 'contribua@pjf.mg.gov.br'}
-            </p>
+      {/* Título */}
+      <div>
+        <h1 className="font-bold text-lg leading-tight">🆘 Ajude JF</h1>
+        <p className="text-xs opacity-75">Juiz de Fora</p>
+      </div>
 
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Clique para copiar
-            </p>
-          </div>
+      {/* Botão previsão */}
+      <a
+        href="https://www.climatempo.com.br/previsao-do-tempo/cidade/152/juizdefora-mg"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-1.5 bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+      >
+        <CloudSun className="w-4 h-4" />
+        Previsão do tempo
+      </a>
+    </div>
 
-          <a
-            href="https://www.climatempo.com.br/previsao-do-tempo/cidade/152/juizdefora-mg"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
-          >
-            <CloudSun className="w-4 h-4" />
-            Previsão
-          </a>
-        </div>
-      </header>
+    {/* PIX - sempre embaixo */}
+    <div
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText('contribua@pjf.mg.gov.br');
+          setPixCopied(true);
+          setTimeout(() => setPixCopied(false), 2000);
+        } catch (err) {
+          console.error('Erro ao copiar PIX', err);
+        }
+      }}
+      className="mt-3 bg-card border border-primary/30 rounded-xl px-4 py-3 shadow-sm cursor-pointer hover:scale-[1.01] transition-all"
+    >
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        Pix Oficial Prefeitura
+      </p>
+
+      <p className="font-bold text-primary mt-1 break-all text-sm sm:text-base">
+        {pixCopied ? '✅ PIX copiado!' : 'contribua@pjf.mg.gov.br'}
+      </p>
+
+      <p className="text-[10px] text-muted-foreground mt-1">
+        Clique para copiar
+      </p>
+    </div>
+
+  </div>
+</header>
 
       {/* ALERTA SEGURANÇA */}
       <div className="bg-destructive text-destructive-foreground">
