@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { X, Upload, Loader2 } from 'lucide-react';
+import { X, Upload, Loader2, MapPin } from 'lucide-react'; // Adicionado MapPin
+import { useToast } from "@/hooks/use-toast"; // Importado para dar feedback ao usuário
 
 interface Props {
   onClose: () => void;
@@ -9,17 +10,52 @@ interface Props {
 }
 
 export default function ReportForm({ onClose, onSuccess, initialType }: Props) {
-  const [type, setType] = useState<'flooding' | 'landslide'>(
-  initialType || 'flooding'
-);
+  const { toast } = useToast();
+  const [type, setType] = useState<'flooding' | 'landslide'>(initialType || 'flooding');
   const [address, setAddress] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [reference, setReference] = useState('');
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false); // Estado para o loading do GPS
   const [error, setError] = useState('');
-  
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        variant: "destructive",
+        description: "Seu navegador não suporta geolocalização."
+      });
+      return;
+    }
+
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        // Adicionamos as coordenadas no campo de descrição para que o admin/outros usuários vejam o ponto exato
+        const locationLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        setDescription(prev => 
+          prev ? `${prev}\n\n📍 Localização exata: ${locationLink}` : `📍 Localização exata: ${locationLink}`
+        );
+        
+        toast({ 
+          description: "Localização anexada à descrição com sucesso!" 
+        });
+        setLocationLoading(false);
+      },
+      (err) => {
+        console.error(err);
+        toast({
+          variant: "destructive",
+          description: "Não foi possível obter sua localização. Verifique as permissões."
+        });
+        setLocationLoading(false);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +101,7 @@ export default function ReportForm({ onClose, onSuccess, initialType }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4">
       <div className="bg-card rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card">
+        <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
           <h2 className="font-bold text-lg text-foreground">Reportar Ocorrência</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted">
             <X className="w-5 h-5" />
@@ -73,7 +109,7 @@ export default function ReportForm({ onClose, onSuccess, initialType }: Props) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {/* Type */}
+          {/* Type Selection */}
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -99,62 +135,78 @@ export default function ReportForm({ onClose, onSuccess, initialType }: Props) {
             </button>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-foreground mb-1">
-              Endereço completo *
-            </label>
-            <input
-              type="text"
-              value={address}
-              onChange={e => setAddress(e.target.value)}
-              placeholder="Rua, número..."
-              maxLength={200}
-              className="w-full border border-input rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
+          {/* Botão de Localização Atual */}
+          <button
+            type="button"
+            onClick={handleGetLocation}
+            disabled={locationLoading}
+            className="w-full flex items-center justify-center gap-2 bg-secondary text-secondary-foreground text-sm font-semibold py-2.5 rounded-xl border border-primary/20 hover:bg-secondary/80 transition-colors"
+          >
+            {locationLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <MapPin className="w-4 h-4 text-primary" />
+            )}
+            Usar minha localização atual
+          </button>
 
-          <div>
-            <label className="block text-sm font-semibold text-foreground mb-1">
-              Bairro *
-            </label>
-            <input
-              type="text"
-              value={neighborhood}
-              onChange={e => setNeighborhood(e.target.value)}
-              placeholder="Bairro"
-              maxLength={100}
-              className="w-full border border-input rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-1">
+                Endereço completo *
+              </label>
+              <input
+                type="text"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                placeholder="Rua, número..."
+                maxLength={200}
+                className="w-full border border-input rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-foreground mb-1">
-              Ponto de referência (opcional)
-            </label>
-            <input
-              type="text"
-              value={reference}
-              onChange={e => setReference(e.target.value)}
-              placeholder="Próximo à escola, igreja..."
-              maxLength={150}
-              className="w-full border border-input rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-1">
+                Bairro *
+              </label>
+              <input
+                type="text"
+                value={neighborhood}
+                onChange={e => setNeighborhood(e.target.value)}
+                placeholder="Bairro"
+                maxLength={100}
+                className="w-full border border-input rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-foreground mb-1">
-              Descrição *
-            </label>
-            <textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              placeholder="Descreva a situação..."
-              maxLength={500}
-              rows={3}
-              className="w-full border border-input rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-1">
+                Ponto de referência (opcional)
+              </label>
+              <input
+                type="text"
+                value={reference}
+                onChange={e => setReference(e.target.value)}
+                placeholder="Próximo à escola, igreja..."
+                maxLength={150}
+                className="w-full border border-input rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
 
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-1">
+                Descrição *
+              </label>
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Descreva a situação..."
+                maxLength={500}
+                rows={4}
+                className="w-full border border-input rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              />
+            </div>
+          </div>
 
           {error && (
             <p className="text-sm text-destructive font-medium">{error}</p>

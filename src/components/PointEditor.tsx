@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CollectionPointWithNeeds, Need, NEED_CATEGORIES } from '@/lib/disaster';
+import { CollectionPointWithNeeds, Need, NEED_CATEGORIES, getCoordinatesFromAddress } from '@/lib/disaster'; // Importado getCoordinatesFromAddress
 import { Plus, Trash2, Save, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Props {
@@ -31,7 +31,13 @@ export default function PointEditor({ point, onUpdated }: Props) {
 
   const handleSave = async () => {
     setSaving(true);
-    setMsg('');
+    setMsg('Buscando localização...');
+    
+    // 1. Busca as coordenadas baseadas no endereço preenchido
+    // Adicionamos o bairro e a cidade para garantir precisão no OpenStreetMap
+    const coords = await getCoordinatesFromAddress(`${address}, ${neighborhood}`);
+
+    // 2. Atualiza os dados no Supabase, incluindo latitude e longitude
     const { error } = await supabase.from('collection_points').update({
       name,
       address,
@@ -41,10 +47,17 @@ export default function PointEditor({ point, onUpdated }: Props) {
       hours,
       status,
       description: description || null,
+      // Se não encontrar as coordenadas, mantém o que já estava ou nulo
+      latitude: coords?.lat || (point as any).latitude,
+      longitude: coords?.lng || (point as any).longitude,
     }).eq('id', point.id);
 
-    if (error) setMsg('Erro ao salvar.');
-    else { setMsg('Salvo!'); onUpdated(); }
+    if (error) {
+      setMsg('Erro ao salvar.');
+    } else {
+      setMsg(coords ? 'Salvo com localização!' : 'Salvo (endereço não localizado)');
+      onUpdated();
+    }
 
     setSaving(false);
     setTimeout(() => setMsg(''), 3000);
@@ -134,7 +147,7 @@ export default function PointEditor({ point, onUpdated }: Props) {
                   type="text"
                   value={f.value}
                   onChange={e => f.set(e.target.value)}
-                  className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background"
+                  className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             ))}
@@ -146,7 +159,7 @@ export default function PointEditor({ point, onUpdated }: Props) {
               <select
                 value={status}
                 onChange={e => setStatus(e.target.value)}
-                className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background"
+                className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background outline-none focus:ring-2 focus:ring-primary/20"
               >
                 {STATUSES.map(s => (
                   <option key={s.value} value={s.value}>{s.label}</option>
@@ -162,7 +175,7 @@ export default function PointEditor({ point, onUpdated }: Props) {
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 rows={2}
-                className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background resize-none"
+                className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background resize-none outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
           </div>
@@ -178,9 +191,9 @@ export default function PointEditor({ point, onUpdated }: Props) {
                 ? <Loader2 className="w-3 h-3 animate-spin" />
                 : <Save className="w-3 h-3" />
               }
-              Salvar
+              Salvar alterações
             </button>
-            {msg && <span className="text-xs text-primary">{msg}</span>}
+            {msg && <span className="text-xs font-medium text-primary">{msg}</span>}
           </div>
 
           {/* NECESSIDADES */}
@@ -192,7 +205,7 @@ export default function PointEditor({ point, onUpdated }: Props) {
                 <div key={need.id} className="flex items-center gap-2">
                   <button
                     onClick={() => toggleNeed(need)}
-                    className={`flex-1 flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border ${
+                    className={`flex-1 flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
                       need.urgency === 'urgent'
                         ? 'badge-urgent border-destructive/20'
                         : 'badge-low border-border'
@@ -210,7 +223,7 @@ export default function PointEditor({ point, onUpdated }: Props) {
 
                   <button
                     onClick={() => removeNeed(need.id)}
-                    className="p-1.5 text-muted-foreground hover:text-destructive"
+                    className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -229,7 +242,7 @@ export default function PointEditor({ point, onUpdated }: Props) {
                   <button
                     key={cat}
                     onClick={() => addNeed(cat)}
-                    className="flex items-center gap-1 text-xs bg-muted hover:bg-secondary px-2.5 py-1 rounded-full border border-border"
+                    className="flex items-center gap-1 text-xs bg-muted hover:bg-secondary px-2.5 py-1 rounded-full border border-border transition-colors"
                   >
                     <Plus className="w-3 h-3" /> {cat}
                   </button>
@@ -247,11 +260,11 @@ export default function PointEditor({ point, onUpdated }: Props) {
                 value={customNeed}
                 onChange={e => setCustomNeed(e.target.value)}
                 placeholder="Ex: Fraldas G"
-                className="flex-1 border border-input rounded-lg px-3 py-2 text-xs bg-background"
+                className="flex-1 border border-input rounded-lg px-3 py-2 text-xs bg-background outline-none focus:ring-2 focus:ring-primary/20"
               />
               <button
                 onClick={addCustomNeed}
-                className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-2 rounded-lg"
+                className="bg-primary text-primary-foreground text-xs font-semibold px-4 py-2 rounded-lg hover:opacity-90"
               >
                 Adicionar
               </button>

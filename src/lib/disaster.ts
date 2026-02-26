@@ -5,7 +5,11 @@ export type CollectionPoint = Database['public']['Tables']['collection_points'][
 export type Need = Database['public']['Tables']['needs']['Row'];
 export type Report = Database['public']['Tables']['reports']['Row'];
 
-export type CollectionPointWithNeeds = CollectionPoint & { needs: Need[] };
+// Adicionamos 'distance' como opcional para a tipagem
+export type CollectionPointWithNeeds = CollectionPoint & { 
+  needs: Need[];
+  distance?: number;
+};
 
 export async function fetchPublicCollectionPoints(): Promise<CollectionPointWithNeeds[]> {
   const { data: points, error } = await supabase
@@ -48,32 +52,54 @@ export function getMapsUrl(address: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
 
+/**
+ * Busca coordenadas (lat/lng) de um endereço usando OpenStreetMap (Gratuito)
+ */
+export async function getCoordinatesFromAddress(address: string): Promise<{lat: number, lng: number} | null> {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ", Juiz de Fora, MG")}&limit=1`
+    );
+    const data = await response.json();
+    if (data && data.length > 0) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon)
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("Erro ao buscar coordenadas:", error);
+    return null;
+  }
+}
+
+/**
+ * Calcula a distância entre dois pontos em KM (Fórmula de Haversine)
+ */
+export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Raio da Terra em KM
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
 export const NEED_CATEGORIES = [
-  'Água',
-  'Alimento não perecível',
-  'Alimento pronto',
-  'Roupa masculina',
-  'Roupa feminina',
-  'Roupa infantil',
-  'Colchões',
-  'Cobertores',
-  'Roupa de cama',
-  'Produtos de higiene pessoal',
-  'Produtos de higiene feminina',
-  'Fraldas infantis',
-  'Fraldas para idosos',
-  'Ração animal',
-  'Produtos de limpeza',
-  'Roupas Íntimas Novas',
-  'Leite em Pó, Fórmulas Infantís',
-  'Papel Higiênico',
-  'Outros',
+  'Água', 'Alimento não perecível', 'Alimento pronto', 'Roupa masculina',
+  'Roupa feminina', 'Roupa infantil', 'Colchões', 'Cobertores',
+  'Roupa de cama', 'Produtos de higiene pessoal', 'Produtos de higiene feminina',
+  'Fraldas infantis', 'Fraldas para idosos', 'Ração animal',
+  'Produtos de limpeza', 'Roupas Íntimas Novas', 'Papel Higiênico',
 ] as const;
 
 export function getStatusLabel(status: string) {
   switch (status) {
     case 'open': return 'Aberto';
-    case 'temporarily_closed': return 'Temporariamente Fechado';
+    case 'temporarily_closed': return 'Temp. Fechado';
     case 'closed': return 'Encerrado';
     default: return status;
   }
