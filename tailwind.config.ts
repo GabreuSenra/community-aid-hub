@@ -47,6 +47,14 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        flooding: {
+          DEFAULT: "hsl(200, 85%, 40%)",
+          foreground: "hsl(0, 0%, 100%)",
+        },
+        landslide: {
+          DEFAULT: "hsl(25, 85%, 45%)",
+          foreground: "hsl(0, 0%, 100%)",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
