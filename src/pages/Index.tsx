@@ -13,6 +13,7 @@ import ReportCard from '@/components/ReportCard';
 import ReportForm from '@/components/ReportForm';
 import { CloudSun, AlertTriangle, Package, Search, MapPin, Loader2, X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import Footer from '@/components/Footer';
 
 const PREFEITURA_UUID = 'df93d2fb-8638-458e-93d3-c9d50071130c';
 
@@ -277,6 +278,8 @@ export default function Index() {
       </main>
 
       {showReportForm && <ReportForm initialType={reportType} onClose={() => setShowReportForm(false)} onSuccess={handleReportSuccess} />}
+
+        <Footer />
     </div>
   );
 }
