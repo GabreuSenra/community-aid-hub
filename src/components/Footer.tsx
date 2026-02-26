@@ -47,7 +47,7 @@ export default function Footer() {
               {/* João */}
               <div className="flex items-center justify-between bg-background border border-border rounded-lg px-3 py-2">
                 <span className="font-medium text-foreground">
-                  João Antônio Benhame
+                  João Antônio Fonseca
                 </span>
                 <a
                   href="https://instagram.com/j.aum_"
