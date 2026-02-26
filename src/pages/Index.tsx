@@ -93,6 +93,12 @@ export default function Index() {
           >
             ⛰️ Reportar Deslizamento
           </button>
+          <button
+            onClick={() => window.location.href = '/admin'}
+            className="flex-1 bg-flooding text-flooding-foreground text-sm font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 active:opacity-80"
+          >
+            🚩 Cadastrar Ponto de Coleta
+          </button>
         </div>
       </div>
 
@@ -223,7 +229,7 @@ export default function Index() {
             href="/admin"
             className="block text-center text-xs text-muted-foreground hover:text-primary font-medium"
           >
-            🔐 Área Administrativa
+            🔐 CADASTRAR PONTO DE COLETA
           </a>
         </div>
       </div>

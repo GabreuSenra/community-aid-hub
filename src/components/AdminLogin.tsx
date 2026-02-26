@@ -69,7 +69,7 @@ export default function AdminAuth({ onLogin }: Props) {
           </div>
 
           <h1 className="text-xl font-bold text-foreground">
-            {isRegister ? 'Criar Conta Admin' : 'Área Administrativa'}
+            {isRegister ? 'Criar Conta Admin' : 'Crie uma conta para gerenciar seu ponto de coleta!'}
           </h1>
 
           <p className="text-sm text-muted-foreground mt-1">
