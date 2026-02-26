@@ -64,7 +64,7 @@ export const NEED_CATEGORIES = [
   'Fraldas para idosos',
   'Ração animal',
   'Produtos de limpeza',
-  'Roupas Íntimas',
+  'Roupas Íntimas Novas',
   'Leite em Pó, Fórmulas Infantís',
   'Papel Higiênico',
   'Outros',
