@@ -2,95 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Emergency Alert Design System */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 215 25% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Navy blue primary */
+    --primary: 213 70% 25%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 213 30% 92%;
+    --secondary-foreground: 213 70% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 215 15% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 30% 88%;
+    --accent-foreground: 213 70% 25%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Emergency red */
+    --destructive: 3 85% 48%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 213 20% 88%;
+    --input: 213 20% 88%;
+    --ring: 213 70% 25%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Status colors */
+    --status-open: 142 60% 40%;
+    --status-open-bg: 142 60% 95%;
+    --status-closed: 0 72% 51%;
+    --status-closed-bg: 0 72% 96%;
+    --status-temp: 38 92% 50%;
+    --status-temp-bg: 38 92% 95%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Urgency */
+    --urgent: 3 85% 48%;
+    --urgent-bg: 3 85% 96%;
+    --low-stock: 38 92% 50%;
+    --low-stock-bg: 38 92% 95%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    /* Alert/Report types */
+    --flooding: 200 85% 40%;
+    --flooding-bg: 200 85% 95%;
+    --landslide: 25 85% 45%;
+    --landslide-bg: 25 85% 95%;
 
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 213 70% 20%;
+    --sidebar-foreground: 210 40% 95%;
+    --sidebar-primary: 210 40% 95%;
+    --sidebar-primary-foreground: 213 70% 20%;
+    --sidebar-accent: 213 50% 30%;
+    --sidebar-accent-foreground: 210 40% 95%;
+    --sidebar-border: 213 50% 28%;
+    --sidebar-ring: 213 70% 60%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 215 30% 8%;
+    --foreground: 210 30% 95%;
+    --card: 215 28% 11%;
+    --card-foreground: 210 30% 95%;
+    --popover: 215 28% 11%;
+    --popover-foreground: 210 30% 95%;
+    --primary: 213 70% 55%;
+    --primary-foreground: 215 30% 8%;
+    --secondary: 215 25% 20%;
+    --secondary-foreground: 210 30% 95%;
+    --muted: 215 25% 18%;
+    --muted-foreground: 215 15% 60%;
+    --accent: 215 25% 22%;
+    --accent-foreground: 210 30% 95%;
+    --destructive: 3 85% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 25% 20%;
+    --input: 215 25% 20%;
+    --ring: 213 70% 55%;
   }
 }
 
@@ -98,8 +94,39 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer utilities {
+  .status-open {
+    color: hsl(var(--status-open));
+    background-color: hsl(var(--status-open-bg));
+  }
+  .status-closed {
+    color: hsl(var(--status-closed));
+    background-color: hsl(var(--status-closed-bg));
+  }
+  .status-temp {
+    color: hsl(var(--status-temp));
+    background-color: hsl(var(--status-temp-bg));
+  }
+  .badge-urgent {
+    color: hsl(var(--urgent));
+    background-color: hsl(var(--urgent-bg));
+  }
+  .badge-low {
+    color: hsl(var(--low-stock));
+    background-color: hsl(var(--low-stock-bg));
+  }
+  .type-flooding {
+    color: hsl(var(--flooding));
+    background-color: hsl(var(--flooding-bg));
+  }
+  .type-landslide {
+    color: hsl(var(--landslide));
+    background-color: hsl(var(--landslide-bg));
   }
 }
