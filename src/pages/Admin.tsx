@@ -1,29 +1,31 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CollectionPointWithNeeds, fetchCollectionPoints } from '@/lib/disaster';
+import { Session } from '@supabase/supabase-js';
+import { CollectionPointWithNeeds, NEED_CATEGORIES, fetchUserCollectionPoints } from '@/lib/disaster';
 import AdminLogin from '@/components/AdminLogin';
 import PointEditor from '@/components/PointEditor';
 import { LogOut, Plus, Loader2, ArrowLeft } from 'lucide-react';
 
-const STATUSES = [
-  { value: 'open', label: 'Aberto' },
-  { value: 'temporarily_closed', label: 'Temp. Fechado' },
-  { value: 'closed', label: 'Encerrado' },
-];
-
 export default function Admin() {
-  const [session, setSession] = useState<unknown>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [points, setPoints] = useState<CollectionPointWithNeeds[]>([]);
   const [showCreate, setShowCreate] = useState(false);
 
-  // New point form
+  // Form states
   const [newName, setNewName] = useState('');
   const [newAddress, setNewAddress] = useState('');
   const [newNeighborhood, setNewNeighborhood] = useState('');
   const [newResponsible, setNewResponsible] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newHours, setNewHours] = useState('');
+  type TempNeed = {
+    category: string;
+    urgency: 'low' | 'urgent';
+  };
+
+  const [newNeeds, setNewNeeds] = useState<TempNeed[]>([]);
+
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
 
@@ -32,41 +34,112 @@ export default function Admin() {
       setSession(data.session);
       setLoading(false);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s));
+
+    const { data: { subscription } } =
+      supabase.auth.onAuthStateChange((_, s) => setSession(s));
+
     return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (session) loadPoints();
+    if (session?.user?.id) loadPoints();
   }, [session]);
 
   const loadPoints = async () => {
-    try { setPoints(await fetchCollectionPoints()); } catch (e) { console.error(e); }
+    if (!session?.user?.id) return;
+    try {
+      const data = await fetchUserCollectionPoints(session.user.id);
+      setPoints(data);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
 
+  const toggleNewNeed = (category: string) => {
+    setNewNeeds(prev => {
+      const existing = prev.find(n => n.category === category);
+
+      if (!existing) {
+        // adiciona como low
+        return [...prev, { category, urgency: 'low' }];
+      }
+
+      if (existing.urgency === 'low') {
+        // vira urgente
+        return prev.map(n =>
+          n.category === category ? { ...n, urgency: 'urgent' } : n
+        );
+      }
+
+      // se já for urgent, remove
+      return prev.filter(n => n.category !== category);
+    });
+  };
+
+  const resetForm = () => {
+    setNewName('');
+    setNewAddress('');
+    setNewNeighborhood('');
+    setNewResponsible('');
+    setNewPhone('');
+    setNewHours('');
+    setNewNeeds([]);
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!session?.user?.id) return;
+
     if (!newName || !newAddress || !newNeighborhood || !newResponsible || !newPhone || !newHours) {
       setCreateError('Preencha todos os campos.');
       return;
     }
+
+    if (newNeeds.length === 0) {
+      setCreateError('Selecione pelo menos uma necessidade.');
+      return;
+    }
+
     setCreating(true);
     setCreateError('');
-    const { error } = await supabase.from('collection_points').insert({
-      name: newName, address: newAddress, neighborhood: newNeighborhood,
-      responsible: newResponsible, phone: newPhone, hours: newHours,
-    });
-    if (error) { setCreateError('Erro ao criar ponto.'); }
-    else {
-      setShowCreate(false);
-      setNewName(''); setNewAddress(''); setNewNeighborhood('');
-      setNewResponsible(''); setNewPhone(''); setNewHours('');
-      await loadPoints();
+
+    const { data, error } = await supabase
+      .from('collection_points')
+      .insert({
+        name: newName,
+        address: newAddress,
+        neighborhood: newNeighborhood,
+        responsible: newResponsible,
+        phone: newPhone,
+        hours: newHours,
+        new_uuid: session.user.id,
+      })
+      .select()
+      .single();
+
+    if (error || !data) {
+      setCreateError('Erro ao criar ponto.');
+      setCreating(false);
+      return;
     }
+
+const needsToInsert = newNeeds.map(need => ({
+  collection_point_id: data.id,
+  category: need.category,
+  urgency: need.urgency,
+  is_active: true,
+}));
+
+    await supabase.from('needs').insert(needsToInsert);
+
+    resetForm();
+    setShowCreate(false);
+    await loadPoints();
     setCreating(false);
   };
 
@@ -79,7 +152,7 @@ export default function Admin() {
   }
 
   if (!session) {
-    return <AdminLogin onLogin={() => {}} />;
+    return <AdminLogin onLogin={() => { }} />;
   }
 
   return (
@@ -111,49 +184,105 @@ export default function Admin() {
         </button>
 
         {showCreate && (
-          <form onSubmit={handleCreate} className="bg-card rounded-xl border border-border p-4 space-y-3">
+          <form onSubmit={handleCreate} className="bg-card rounded-xl border border-border p-4 space-y-4">
             <p className="font-bold text-foreground text-sm">Novo Ponto</p>
-            {[
-              { label: 'Nome *', value: newName, set: setNewName, ph: 'Nome do local' },
-              { label: 'Endereço *', value: newAddress, set: setNewAddress, ph: 'Rua, número' },
-              { label: 'Bairro *', value: newNeighborhood, set: setNewNeighborhood, ph: 'Bairro' },
-              { label: 'Responsável *', value: newResponsible, set: setNewResponsible, ph: 'Nome do responsável' },
-              { label: 'Telefone *', value: newPhone, set: setNewPhone, ph: '(32) 99999-9999' },
-              { label: 'Horário *', value: newHours, set: setNewHours, ph: '8h às 18h' },
-            ].map(f => (
+
+            {[{
+              label: 'Nome *', value: newName, set: setNewName
+            }, {
+              label: 'Endereço *', value: newAddress, set: setNewAddress
+            }, {
+              label: 'Bairro *', value: newNeighborhood, set: setNewNeighborhood
+            }, {
+              label: 'Responsável *', value: newResponsible, set: setNewResponsible
+            }, {
+              label: 'Telefone *', value: newPhone, set: setNewPhone
+            }, {
+              label: 'Horário *', value: newHours, set: setNewHours
+            }].map(f => (
               <div key={f.label}>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1">{f.label}</label>
                 <input
-                  type="text" value={f.value} onChange={e => f.set(e.target.value)}
-                  placeholder={f.ph}
+                  type="text"
+                  value={f.value}
+                  onChange={e => f.set(e.target.value)}
                   className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             ))}
-            {createError && <p className="text-xs text-destructive font-medium">{createError}</p>}
-            <div className="flex gap-2">
-              <button type="submit" disabled={creating}
-                className="flex-1 bg-primary text-primary-foreground text-sm font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 disabled:opacity-60">
-                {creating && <Loader2 className="w-3 h-3 animate-spin" />}
-                Criar Ponto
-              </button>
-              <button type="button" onClick={() => setShowCreate(false)}
-                className="px-4 text-sm font-semibold text-muted-foreground border border-border rounded-lg">
-                Cancelar
-              </button>
+
+            {/* Needs selection */}
+            <div className="border-t border-border pt-3">
+              <p className="text-xs font-bold text-foreground mb-2">
+                Necessidades Iniciais
+              </p>
+
+              {/* Legenda */}
+              <div className="flex items-center gap-4 text-xs mb-2">
+                <div className="flex items-center gap-1">
+                  <span>🟡</span>
+                  <span className="text-muted-foreground">Baixo</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>🔴</span>
+                  <span className="text-muted-foreground">Urgente</span>
+                </div>
+                <span className="text-muted-foreground opacity-70">
+                  (Clique para adicionar → urgente → remover)
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {NEED_CATEGORIES.map(cat => {
+                  const existing = newNeeds.find(n => n.category === cat);
+
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => toggleNewNeed(cat)}
+                      className={`flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border transition ${existing
+                          ? existing.urgency === 'urgent'
+                            ? 'badge-urgent border-destructive/20'
+                            : 'badge-low border-border'
+                          : 'bg-muted text-muted-foreground border-border hover:bg-secondary'
+                        }`}
+                    >
+                      {existing && (
+                        <span>
+                          {existing.urgency === 'urgent' ? '🔴' : '🟡'}
+                        </span>
+                      )}
+                      {cat}
+                      {existing && (
+                        <span className="ml-auto text-[10px] opacity-60">
+                          {existing.urgency === 'urgent' ? 'Urgente' : 'Baixo'}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
+            {createError && (
+              <p className="text-xs text-destructive font-medium">{createError}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={creating}
+              className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {creating && <Loader2 className="w-4 h-4 animate-spin" />}
+              Criar Ponto
+            </button>
           </form>
         )}
 
-        {points.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <p>Nenhum ponto cadastrado ainda.</p>
-          </div>
-        ) : (
-          points.map(point => (
-            <PointEditor key={point.id} point={point} onUpdated={loadPoints} />
-          ))
-        )}
+        {points.map(point => (
+          <PointEditor key={point.id} point={point} onUpdated={loadPoints} />
+        ))}
       </main>
     </div>
   );

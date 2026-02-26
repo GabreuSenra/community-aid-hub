@@ -27,6 +27,7 @@ export default function PointEditor({ point, onUpdated }: Props) {
   const [needs, setNeeds] = useState<Need[]>(point.needs || []);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [newNeeds, setNewNeeds] = useState<string[]>([]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -39,6 +40,14 @@ export default function PointEditor({ point, onUpdated }: Props) {
     setSaving(false);
     setTimeout(() => setMsg(''), 3000);
   };
+
+  const toggleNewNeed = (category: string) => {
+  setNewNeeds(prev =>
+    prev.includes(category)
+      ? prev.filter(c => c !== category)
+      : [...prev, category]
+  );
+};
 
   const addNeed = async (category: string) => {
     const { data, error } = await supabase.from('needs').insert({
@@ -129,7 +138,7 @@ export default function PointEditor({ point, onUpdated }: Props) {
             </button>
             {msg && <span className="text-xs font-medium text-primary">{msg}</span>}
           </div>
-
+            
           {/* Needs management */}
           <div className="border-t border-border pt-3">
             <p className="text-xs font-bold text-foreground mb-2">Necessidades Atuais</p>

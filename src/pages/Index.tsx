@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CollectionPointWithNeeds, fetchCollectionPoints, fetchReports, Report } from '@/lib/disaster';
+import { CollectionPointWithNeeds, fetchPublicCollectionPoints, fetchReports, Report } from '@/lib/disaster';
 import CollectionPointCard from '@/components/CollectionPointCard';
 import ReportCard from '@/components/ReportCard';
 import ReportForm from '@/components/ReportForm';
@@ -18,10 +18,11 @@ export default function Index() {
   const [loadingPoints, setLoadingPoints] = useState(true);
   const [loadingReports, setLoadingReports] = useState(true);
   const [reportSuccess, setReportSuccess] = useState(false);
+  const [reportType, setReportType] = useState<'flooding' | 'landslide'>('flooding');
 
   const loadPoints = async () => {
     setLoadingPoints(true);
-    try { setPoints(await fetchCollectionPoints()); } catch (e) { console.error(e); }
+    try { setPoints(await fetchPublicCollectionPoints()); } catch (e) { console.error(e); }
     setLoadingPoints(false);
   };
 
@@ -82,22 +83,30 @@ export default function Index() {
       <div className="bg-destructive/10 border-b border-destructive/20">
         <div className="max-w-2xl mx-auto px-4 py-3 flex gap-2">
           <button
-            onClick={() => setShowReportForm(true)}
+            onClick={() => {
+              setReportType('flooding');
+              setShowReportForm(true);
+            }}
             className="flex-1 bg-flooding text-flooding-foreground text-sm font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 active:opacity-80"
           >
             🌊 Reportar Alagamento
           </button>
+
           <button
-            onClick={() => setShowReportForm(true)}
+            onClick={() => {
+              setReportType('landslide');
+              setShowReportForm(true);
+            }}
             className="flex-1 bg-landslide text-landslide-foreground text-sm font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 active:opacity-80"
           >
             ⛰️ Reportar Deslizamento
           </button>
+
           <button
             onClick={() => window.location.href = '/admin'}
             className="flex-1 bg-flooding text-flooding-foreground text-sm font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 active:opacity-80"
           >
-            🚩 Cadastrar Ponto de Coleta
+            🚩 Cadastrar/Acessar Ponto de Coleta
           </button>
         </div>
       </div>
@@ -115,18 +124,16 @@ export default function Index() {
         <div className="flex gap-2 bg-muted p-1 rounded-xl">
           <button
             onClick={() => setTab('points')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${
-              tab === 'points' ? 'bg-card shadow text-foreground' : 'text-muted-foreground'
-            }`}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${tab === 'points' ? 'bg-card shadow text-foreground' : 'text-muted-foreground'
+              }`}
           >
             <Package className="w-4 h-4" />
             Pontos de Coleta
           </button>
           <button
             onClick={() => setTab('alerts')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${
-              tab === 'alerts' ? 'bg-card shadow text-foreground' : 'text-muted-foreground'
-            }`}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${tab === 'alerts' ? 'bg-card shadow text-foreground' : 'text-muted-foreground'
+              }`}
           >
             <AlertTriangle className="w-4 h-4" />
             Ocorrências
@@ -157,7 +164,7 @@ export default function Index() {
 
             {loadingPoints ? (
               <div className="space-y-3">
-                {[1,2,3].map(i => (
+                {[1, 2, 3].map(i => (
                   <div key={i} className="bg-card rounded-xl border border-border h-40 animate-pulse" />
                 ))}
               </div>
@@ -187,9 +194,8 @@ export default function Index() {
                   <button
                     key={h}
                     onClick={() => setHoursFilter(h)}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${
-                      hoursFilter === h ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                    }`}
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${hoursFilter === h ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      }`}
                   >
                     {h}h
                   </button>
@@ -202,7 +208,7 @@ export default function Index() {
 
             {loadingReports ? (
               <div className="space-y-3">
-                {[1,2].map(i => (
+                {[1, 2].map(i => (
                   <div key={i} className="bg-card rounded-xl border border-border h-24 animate-pulse" />
                 ))}
               </div>
@@ -229,13 +235,14 @@ export default function Index() {
             href="/admin"
             className="block text-center text-xs text-muted-foreground hover:text-primary font-medium"
           >
-            🔐 CADASTRAR PONTO DE COLETA
+            🔐 CADASTRAR/ACESSAR PONTO DE COLETA
           </a>
         </div>
       </div>
 
       {showReportForm && (
         <ReportForm
+          initialType={reportType}
           onClose={() => setShowReportForm(false)}
           onSuccess={handleReportSuccess}
         />

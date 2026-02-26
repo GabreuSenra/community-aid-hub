@@ -7,12 +7,28 @@ export type Report = Database['public']['Tables']['reports']['Row'];
 
 export type CollectionPointWithNeeds = CollectionPoint & { needs: Need[] };
 
-export async function fetchCollectionPoints(): Promise<CollectionPointWithNeeds[]> {
+export async function fetchPublicCollectionPoints(): Promise<CollectionPointWithNeeds[]> {
   const { data: points, error } = await supabase
     .from('collection_points')
     .select('*, needs(*)')
     .order('name');
+
   if (error) throw error;
+
+  return (points as CollectionPointWithNeeds[]) || [];
+}
+
+export async function fetchUserCollectionPoints(
+  userId: string
+): Promise<CollectionPointWithNeeds[]> {
+  const { data: points, error } = await supabase
+    .from('collection_points')
+    .select('*, needs(*)')
+    .eq('new_uuid', userId)
+    .order('name');
+
+  if (error) throw error;
+
   return (points as CollectionPointWithNeeds[]) || [];
 }
 
@@ -42,7 +58,10 @@ export const NEED_CATEGORIES = [
   'Colchões',
   'Cobertores',
   'Roupa de cama',
-  'Produtos de higiene',
+  'Produtos de higiene pessoal',
+  'Produtos de higiene feminina',
+  'Fraldas infatis',
+  'Fraldas para idosos',
   'Ração animal',
   'Outros',
 ] as const;

@@ -5,10 +5,13 @@ import { X, Upload, Loader2 } from 'lucide-react';
 interface Props {
   onClose: () => void;
   onSuccess: () => void;
+  initialType?: 'flooding' | 'landslide';
 }
 
-export default function ReportForm({ onClose, onSuccess }: Props) {
-  const [type, setType] = useState<'flooding' | 'landslide'>('flooding');
+export default function ReportForm({ onClose, onSuccess, initialType }: Props) {
+  const [type, setType] = useState<'flooding' | 'landslide'>(
+  initialType || 'flooding'
+);
   const [address, setAddress] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [reference, setReference] = useState('');
@@ -16,6 +19,7 @@ export default function ReportForm({ onClose, onSuccess }: Props) {
   const [photo, setPhoto] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,23 +155,6 @@ export default function ReportForm({ onClose, onSuccess }: Props) {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-foreground mb-1">
-              Foto (opcional)
-            </label>
-            <label className="flex items-center gap-2 border-2 border-dashed border-border rounded-lg p-3 cursor-pointer hover:bg-muted transition-colors">
-              <Upload className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {photo ? photo.name : 'Anexar foto'}
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={e => setPhoto(e.target.files?.[0] || null)}
-              />
-            </label>
-          </div>
 
           {error && (
             <p className="text-sm text-destructive font-medium">{error}</p>
