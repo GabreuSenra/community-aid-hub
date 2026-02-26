@@ -60,9 +60,13 @@ export const NEED_CATEGORIES = [
   'Roupa de cama',
   'Produtos de higiene pessoal',
   'Produtos de higiene feminina',
-  'Fraldas infatis',
+  'Fraldas infantis',
   'Fraldas para idosos',
   'Ração animal',
+  'Produtos de limpeza',
+  'Roupas Íntimas',
+  'Leite em Pó, Fórmulas Infantís',
+  'Papel Higiênico',
   'Outros',
 ] as const;
 
