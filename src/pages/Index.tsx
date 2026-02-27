@@ -73,7 +73,7 @@ export default function Index() {
       }
 
       if (pLat && pLng) {
-        const dist = calculateDistance(userPos.lat, userPos.lng, pLat, pLng);
+        const dist = calculateDistance(userPos.lat, userPos.lng, pLat, pLng) + 1;
         return { ...p, distance: dist, latitude: pLat, longitude: pLng };
       }
       return p;
