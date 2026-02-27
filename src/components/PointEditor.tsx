@@ -29,10 +29,12 @@ export default function PointEditor({ point, onUpdated }: Props) {
   const [msg, setMsg] = useState('');
   const [customNeed, setCustomNeed] = useState('');
 
+  const isShelter = description === 'Abrigo';
+
   const handleSave = async () => {
     setSaving(true);
     setMsg('Buscando localização...');
-    
+
     // 1. Busca as coordenadas baseadas no endereço preenchido
     // Adicionamos o bairro e a cidade para garantir precisão no OpenStreetMap
     const coords = await getCoordinatesFromAddress(`${address}, ${neighborhood}`);
@@ -175,7 +177,9 @@ export default function PointEditor({ point, onUpdated }: Props) {
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 rows={2}
-                className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background resize-none outline-none focus:ring-2 focus:ring-primary/20"
+                disabled={isShelter}
+                className={`w-full border border-input rounded-lg px-3 py-2 text-sm bg-background resize-none outline-none focus:ring-2 focus:ring-primary/20 ${isShelter ? 'opacity-60 cursor-not-allowed' : ''
+                  }`}
               />
             </div>
           </div>
@@ -205,11 +209,10 @@ export default function PointEditor({ point, onUpdated }: Props) {
                 <div key={need.id} className="flex items-center gap-2">
                   <button
                     onClick={() => toggleNeed(need)}
-                    className={`flex-1 flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
-                      need.urgency === 'urgent'
+                    className={`flex-1 flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${need.urgency === 'urgent'
                         ? 'badge-urgent border-destructive/20'
                         : 'badge-low border-border'
-                    }`}
+                      }`}
                   >
                     <span>{need.urgency === 'urgent' ? '🔴' : '🟡'}</span>
                     {need.category === 'Outros'
