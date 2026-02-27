@@ -1,6 +1,6 @@
 import React from 'react';
-import { MapPin, Phone, Clock, ChevronDown, ChevronUp, MessageCircle, Copy } from 'lucide-react';
-import { CollectionPointWithNeeds, getMapsUrl, getStatusLabel, getStatusClass } from '@/lib/disaster';
+import { RefreshCw, MapPin, Phone, Clock, ChevronDown, ChevronUp, MessageCircle, Copy } from 'lucide-react';
+import { formatLastUpdated, CollectionPointWithNeeds, getMapsUrl, getStatusLabel, getStatusClass } from '@/lib/disaster';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -88,16 +88,49 @@ export default function CollectionPointCard({ point }: Props) {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 1080, 1920);
 
-    // --- Card Central ---
-    ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-    ctx.roundRect(50, 250, 980, 1400, 40);
-    ctx.fill();
-
-    // --- Header / Logo ---
+    // --- Header / Logo (Movido para a Esquerda) ---
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 90px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("🆘 Ajude JF", 540, 180);
+    ctx.textAlign = "left";
+    ctx.fillText("🆘 Ajude JF", 60, 140);
+
+    // --- Legenda (Canto Superior Direito) ---
+    const legendX = 680;
+    let legendY = 70;
+
+    // Box da legenda
+    ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+    ctx.roundRect(legendX - 20, legendY - 35, 370, 140, 20);
+    ctx.fill();
+
+    ctx.textAlign = "left";
+    ctx.font = "26px sans-serif";
+
+    // Item 1: Crítico
+    ctx.fillStyle = "#ef4444";
+    ctx.beginPath(); ctx.arc(legendX, legendY - 7, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("Estoque crítico", legendX + 25, legendY);
+
+    // Item 2: Baixo
+    legendY += 40;
+    ctx.fillStyle = "#eab308";
+    ctx.beginPath(); ctx.arc(legendX, legendY - 7, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("Estoque baixo", legendX + 25, legendY);
+
+    // Item 3: Excesso
+    legendY += 40;
+    ctx.fillStyle = "#3b82f6";
+    ctx.beginPath(); ctx.arc(legendX, legendY - 7, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("Estoque em excesso", legendX + 25, legendY);
+
+
+    // --- Card Central ---
+    ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+    ctx.roundRect(50, 240, 980, 1430, 40);
+    ctx.fill();
 
     // --- Função para Quebra de Linha (Word Wrap) ---
     function wrapText(context: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) {
@@ -108,8 +141,7 @@ export default function CollectionPointCard({ point }: Props) {
       for (let n = 0; n < words.length; n++) {
         const testLine = line + words[n] + ' ';
         const metrics = context.measureText(testLine);
-        const testWidth = metrics.width;
-        if (testWidth > maxWidth && n > 0) {
+        if (metrics.width > maxWidth && n > 0) {
           context.fillText(line, x, currentY);
           line = words[n] + ' ';
           currentY += lineHeight;
@@ -118,55 +150,75 @@ export default function CollectionPointCard({ point }: Props) {
         }
       }
       context.fillText(line, x, currentY);
-      return currentY; // Retorna a posição Y final para sabermos onde desenhar o próximo elemento
+      return currentY;
     }
 
     // --- Nome do Local ---
     ctx.font = "bold 70px sans-serif";
     ctx.textAlign = "left";
     ctx.fillStyle = "#ffffff";
-    // Chama a função de quebra de linha. 840 é a largura máxima permitida no card.
-    const finalNameY = wrapText(ctx, point.name, 120, 380, 840, 80);
+    // Chama a função de quebra e salva onde o nome terminou
+    const finalNameY = wrapText(ctx, point.name, 120, 360, 840, 80);
 
     // --- Endereço ---
     ctx.font = "40px sans-serif";
     ctx.fillStyle = "#94a3b8"; // Slate 400
-    // O endereço agora é desenhado baseado na posição final do nome
     ctx.fillText(point.neighborhood, 120, finalNameY + 70);
-    
-    // --- Título Necessidades ---
-    ctx.font = "bold 50px sans-serif";
-    ctx.fillStyle = "#ffffff";
-    // O título "Precisa de:" também desce se o nome for grande
-    ctx.fillText("Precisa de:", 120, finalNameY + 200);
 
-    // --- Lista de Necessidades com "Badges" ---
-    // A lista começa abaixo do título
-    let listY = finalNameY + 300; 
-    
-    // Mostra até 8 necessidades. Mudamos de point.needs para regularNeeds 
-    // se você quiser filtrar a necessidade "Vagas" do story, mas deixarei o código original.
-    const activeNeeds = point.needs?.filter(n => n.is_active).slice(0, 8) || [];
-    
-    activeNeeds.forEach(n => {
-      const label = n.category === 'Outros' && n.custom_label ? n.custom_label : n.category;
-      
-      // Cor baseada na urgência
-      let badgeColor = "#eab308"; // Amarelo (Baixo)
-      if (n.urgency === 'urgent') badgeColor = "#ef4444"; // Vermelho
-      if (n.urgency === 'excess') badgeColor = "#3b82f6"; // Azul
+    // --- Separação das Listas (Necessidades vs Excesso) ---
+    const needsNeeded = regularNeeds.filter(n => n.urgency !== 'excess');
+    const needsExcess = regularNeeds.filter(n => n.urgency === 'excess');
 
-      // Desenha o marcador
-      ctx.fillStyle = badgeColor;
-      ctx.beginPath();
-      ctx.arc(140, listY - 15, 12, 0, Math.PI * 2);
-      ctx.fill();
+    let currentY = finalNameY + 180;
 
+    // BLOCO 1: O que precisa
+    if (needsNeeded.length > 0) {
+      ctx.font = "bold 50px sans-serif";
       ctx.fillStyle = "#ffffff";
-      ctx.font = "45px sans-serif";
-      ctx.fillText(label, 180, listY);
-      listY += 90;
-    });
+      ctx.fillText("Precisa de:", 120, currentY);
+      currentY += 80;
+
+      // Limita a 5 se houver excesso, ou 8 se não houver (para caber na tela)
+      const limit = needsExcess.length > 0 ? 5 : 8;
+
+      needsNeeded.slice(0, limit).forEach(n => {
+        const label = n.category === 'Outros' && n.custom_label ? n.custom_label : n.category;
+
+        ctx.fillStyle = n.urgency === 'urgent' ? "#ef4444" : "#eab308";
+        ctx.beginPath();
+        ctx.arc(140, currentY - 15, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "45px sans-serif";
+        ctx.fillText(label, 180, currentY);
+        currentY += 75;
+      });
+
+      currentY += 40;
+    }
+
+    // BLOCO 2: Excesso (Pode doar)
+    if (needsExcess.length > 0) {
+      ctx.font = "bold 50px sans-serif";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText("Em Excesso (Pode doar para outros):", 120, currentY);
+      currentY += 80;
+
+      needsExcess.slice(0, 5).forEach(n => {
+        const label = n.category === 'Outros' && n.custom_label ? n.custom_label : n.category;
+
+        ctx.fillStyle = "#3b82f6"; // Azul
+        ctx.beginPath();
+        ctx.arc(140, currentY - 15, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "45px sans-serif";
+        ctx.fillText(label, 180, currentY);
+        currentY += 75;
+      });
+    }
 
     // --- Footer / Link informativo ---
     ctx.fillStyle = "#ffffff";
@@ -177,30 +229,36 @@ export default function CollectionPointCard({ point }: Props) {
     ctx.font = "bold 55px sans-serif";
     ctx.fillText(window.location.origin, 540, 1830);
 
-    // --- Processo de Compartilhamento ---
+    // --- Processo de Compartilhamento Seguro ---
     canvas.toBlob(async (blob) => {
       if (!blob) return;
       const file = new File([blob], "ajude-jf-ponto.png", { type: "image/png" });
 
-      if (!isMobile) {
-        // No Desktop: Baixa a imagem
+      const downloadFallback = () => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
         link.download = `ajude-jf-${point.name.replace(/\s+/g, '-').toLowerCase()}.png`;
         link.click();
-        toast({ description: "Imagem baixada! Poste no seu Story." });
-      } else if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        // No Mobile: Abre o menu de compartilhar (Instagram, WhatsApp, etc)
-        try {
-          await navigator.share({
-            files: [file],
-            title: "Ajude JF - " + point.name,
-            text: `Confira as necessidades para ${point.name}. Acesse: ${window.location.href}`
-          });
-        } catch (err) {
-          console.error("Erro ao compartilhar", err);
+        toast({ description: "Imagem salva! Poste no seu Story." });
+      };
+
+      if (isMobile) {
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: "Ajude JF - " + point.name,
+            });
+            toast({ description: "Abrindo menu de compartilhamento..." });
+          } catch (err: any) {
+            if (err.name !== "AbortError") downloadFallback();
+          }
+        } else {
+          downloadFallback();
         }
+      } else {
+        downloadFallback();
       }
     });
   }
@@ -238,14 +296,24 @@ export default function CollectionPointCard({ point }: Props) {
               {/* Exibição da Distância */}
               {point.distance !== undefined && (
                 <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full border border-green-200">
-                  Aproximadamente a {point.distance.toFixed(1)} km
+                  Aproximadamente a {point.distance.toFixed(1)} km da localização informada.
                 </span>
               )}
             </div>
           </div>
-          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${getStatusClass(point.status)}`}>
-            {getStatusLabel(point.status)}
-          </span>
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
+            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${getStatusClass(point.status)}`}>
+              {getStatusLabel(point.status)}
+            </span>
+
+            {/* Exibição da última atualização baseada na coluna updated_at */}
+            {(point as any).updated_at && (
+              <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                <RefreshCw className="w-3 h-3" />
+                {formatLastUpdated((point as any).updated_at)}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -312,7 +380,7 @@ export default function CollectionPointCard({ point }: Props) {
           </div>
         )}
 
-        
+
 
         {/* Needs Section */}
         <div className="border-t border-border pt-3 mt-3">
@@ -384,6 +452,6 @@ export default function CollectionPointCard({ point }: Props) {
         </button>
       </div>
 
-    </div>
+    </div >
   );
 }

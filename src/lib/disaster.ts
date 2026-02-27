@@ -113,3 +113,20 @@ export function getStatusClass(status: string) {
     default: return 'status-closed';
   }
 }
+
+export function formatLastUpdated(dateString?: string | null): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInMins = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+  if (diffInMins < 60) return `Atualizado há ${diffInMins <= 0 ? 'agora mesmo' : `${diffInMins} min`}`;
+  if (diffInHours < 24) return `Atualizado há ${diffInHours}h`;
+  if (diffInDays === 1) return `Atualizado ontem`;
+  if (diffInDays < 7) return `Atualizado há ${diffInDays} dias`;
+
+  return `Atualizado em ${date.toLocaleDateString('pt-BR')}`;
+}
