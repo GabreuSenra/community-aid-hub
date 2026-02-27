@@ -14,21 +14,35 @@ interface Props {
   point: CollectionPointWithNeeds;
 }
 
-const NeedBadge = ({ urgency, label }: { urgency: string; label: string }) => (
-  <span
-    className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border ${
-      urgency === 'urgent'
-        ? 'badge-urgent border-destructive/20'
-        : 'badge-low border-border'
-    }`}
-  >
-    <span>{urgency === 'urgent' ? '🔴' : '🟡'}</span>
-    {label}
-    <span className="ml-1 opacity-60 text-[10px]">
-      {urgency === 'urgent' ? 'Urgente' : 'Baixo'}
+const NeedBadge = ({ urgency, label }: { urgency: string; label: string }) => {
+  const isUrgent = urgency === 'urgent';
+  const isExcess = urgency === 'excess';
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border ${isUrgent
+          ? 'bg-red-50 text-red-600 border-red-200'
+          : isExcess
+            ? 'bg-blue-50 text-blue-600 border-blue-200'
+            : 'bg-yellow-50 text-yellow-600 border-yellow-200'
+        }`}
+    >
+      <span>
+        {isUrgent ? '🔴' : isExcess ? '🔵' : '🟡'}
+      </span>
+
+      {label}
+
+      <span className="ml-1 opacity-60 text-[10px]">
+        {isUrgent
+          ? 'Urgente'
+          : isExcess
+            ? 'Em excesso'
+            : 'Baixo'}
+      </span>
     </span>
-  </span>
-);
+  );
+};
 
 export default function CollectionPointCard({ point }: Props) {
   const [expanded, setExpanded] = React.useState(true);
@@ -55,9 +69,9 @@ export default function CollectionPointCard({ point }: Props) {
       }
       toast({ description });
     } catch (err) {
-      toast({ 
-        variant: "destructive", 
-        description: "Erro ao copiar. Por favor, copie manualmente." 
+      toast({
+        variant: "destructive",
+        description: "Erro ao copiar. Por favor, copie manualmente."
       });
     }
   };
@@ -94,12 +108,12 @@ export default function CollectionPointCard({ point }: Props) {
 
         <div className="flex items-center gap-2 text-sm">
           <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger className="text-primary font-medium hover:underline cursor-pointer outline-none text-left">
               {point.phone}
             </DropdownMenuTrigger>
-            
+
             <DropdownMenuContent align="start" className="w-56">
               {isMobile ? (
                 <DropdownMenuItem asChild>
@@ -116,9 +130,9 @@ export default function CollectionPointCard({ point }: Props) {
               )}
 
               <DropdownMenuItem asChild>
-                <a 
-                  href={`https://wa.me/${whatsappNumber}`} 
-                  target="_blank" 
+                <a
+                  href={`https://wa.me/${whatsappNumber}`}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 cursor-pointer w-full"
                 >
@@ -158,18 +172,30 @@ export default function CollectionPointCard({ point }: Props) {
           </button>
 
           <div className="flex items-center gap-4 text-xs mt-2">
-            <div className="flex items-center gap-1"><span>🟡</span><span className="text-muted-foreground">Baixo</span></div>
-            <div className="flex items-center gap-1"><span>🔴</span><span className="text-muted-foreground">Urgente</span></div>
+            <div className="flex items-center gap-1">
+              <span>🟡</span>
+              <span className="text-muted-foreground">Baixo</span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span>🔴</span>
+              <span className="text-muted-foreground">Urgente</span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span>🔵</span>
+              <span className="text-muted-foreground">Em excesso - disponível para distribuição!</span>
+            </div>
           </div>
 
           {expanded && (
             <div className="flex flex-wrap gap-2 mt-3">
               {activeNeeds.length > 0 ? (
                 activeNeeds.map(need => (
-                  <NeedBadge 
-                    key={need.id} 
-                    urgency={need.urgency} 
-                    label={need.category === 'Outros' && need.custom_label ? need.custom_label : need.category} 
+                  <NeedBadge
+                    key={need.id}
+                    urgency={need.urgency}
+                    label={need.category === 'Outros' && need.custom_label ? need.custom_label : need.category}
                   />
                 ))
               ) : (

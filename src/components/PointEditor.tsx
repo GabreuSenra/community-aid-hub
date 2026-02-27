@@ -94,7 +94,11 @@ export default function PointEditor({ point, onUpdated }: Props) {
   };
 
   const toggleNeed = async (need: Need) => {
-    const newUrgency = need.urgency === 'low' ? 'urgent' : 'low';
+    let newUrgency: 'low' | 'urgent' | 'excess';
+
+    if (need.urgency === 'low') newUrgency = 'urgent';
+    else if (need.urgency === 'urgent') newUrgency = 'excess';
+    else newUrgency = 'low';
 
     await supabase.from('needs')
       .update({ urgency: newUrgency })
@@ -210,17 +214,31 @@ export default function PointEditor({ point, onUpdated }: Props) {
                   <button
                     onClick={() => toggleNeed(need)}
                     className={`flex-1 flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${need.urgency === 'urgent'
-                        ? 'badge-urgent border-destructive/20'
-                        : 'badge-low border-border'
+                        ? 'bg-red-50 text-red-600 border-red-200'
+                        : need.urgency === 'excess'
+                          ? 'bg-blue-50 text-blue-600 border-blue-200'
+                          : 'bg-yellow-50 text-yellow-600 border-yellow-200'
                       }`}
                   >
-                    <span>{need.urgency === 'urgent' ? '🔴' : '🟡'}</span>
+                    <span>
+                      {need.urgency === 'urgent'
+                        ? '🔴'
+                        : need.urgency === 'excess'
+                          ? '🔵'
+                          : '🟡'}
+                    </span>
+
                     {need.category === 'Outros'
                       ? need.custom_label
                       : need.category
                     }
-                    <span className="ml-auto text-xs opacity-60">
-                      {need.urgency === 'urgent' ? 'Urgente' : 'Baixo'}
+
+                    <span className="ml-auto text-xs opacity-70">
+                      {need.urgency === 'urgent'
+                        ? 'Urgente'
+                        : need.urgency === 'excess'
+                          ? 'Em excesso'
+                          : 'Baixo'}
                     </span>
                   </button>
 
