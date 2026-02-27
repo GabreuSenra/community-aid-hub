@@ -50,8 +50,8 @@ export default function PointEditor({ point, onUpdated }: Props) {
       status,
       description: description || null,
       // Se não encontrar as coordenadas, mantém o que já estava ou nulo
-      latitude: coords?.lat || (point as any).latitude,
-      longitude: coords?.lng || (point as any).longitude,
+      latitude: coords?.lat ?? point?.latitude ?? null,
+      longitude: coords?.lng ?? point?.longitude ?? null,
     }).eq('id', point.id);
 
     if (error) {

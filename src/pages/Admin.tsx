@@ -4,7 +4,7 @@ import { Session } from '@supabase/supabase-js';
 import { CollectionPointWithNeeds, NEED_CATEGORIES, fetchUserCollectionPoints, getCoordinatesFromAddress } from '@/lib/disaster';
 import AdminLogin from '@/components/AdminLogin';
 import PointEditor from '@/components/PointEditor';
-import { LogOut, Plus, Loader2, ArrowLeft, MapPin } from 'lucide-react';
+import { LogOut, Plus, Loader2, ArrowLeft, MapPin, X, Save } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 export default function Admin() {
