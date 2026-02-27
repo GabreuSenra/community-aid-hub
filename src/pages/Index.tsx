@@ -191,6 +191,15 @@ export default function Index() {
         </div>
       </div>
 
+      <div className="bg-yellow-500 text-destructive-foreground">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex gap-3 items-start">
+          <span className="text-lg">⚠️</span>
+          <div className="text-xs sm:text-sm font-medium">
+            <p className="font-bold opacity-90 mt-1">Atenção: Muitos dos pontos cadastrados da prefeitura estão atualmente sem um supervisor, precisamos de supervisores para manter as informações mais atualizadas possíveis!</p>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-destructive/10 border-b border-destructive/20">
         <div className="max-w-2xl mx-auto px-4 py-3 flex gap-2 flex-col sm:flex-row">
           <button onClick={() => { setReportType('flooding'); setShowReportForm(true); }} className="flex-1 bg-flooding text-flooding-foreground text-sm font-bold py-2.5 px-3 rounded-xl hover:opacity-90">🌊 Reportar Alagamento</button>
