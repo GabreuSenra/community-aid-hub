@@ -10,6 +10,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { Share2 } from "lucide-react";
+
 interface Props {
   point: CollectionPointWithNeeds;
 }
@@ -21,10 +23,10 @@ const NeedBadge = ({ urgency, label }: { urgency: string; label: string }) => {
   return (
     <span
       className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border ${isUrgent
-          ? 'bg-red-50 text-red-600 border-red-200'
-          : isExcess
-            ? 'bg-blue-50 text-blue-600 border-blue-200'
-            : 'bg-yellow-50 text-yellow-600 border-yellow-200'
+        ? 'bg-red-50 text-red-600 border-red-200'
+        : isExcess
+          ? 'bg-blue-50 text-blue-600 border-blue-200'
+          : 'bg-yellow-50 text-yellow-600 border-yellow-200'
         }`}
     >
       <span>
@@ -51,9 +53,64 @@ export default function CollectionPointCard({ point }: Props) {
 
   const activeNeeds = point.needs?.filter(n => n.is_active) || [];
 
+  const normalize = (value?: string) =>
+    value?.trim().toLowerCase();
+
+  const shelterStatusNeed = activeNeeds.find(n => {
+    const category = normalize(n.category);
+    return category === "vagas" || category === "sem vagas" || category === "com vagas";
+  });
+
+  const regularNeeds = activeNeeds.filter(n => {
+    const category = normalize(n.category);
+    return category !== "vagas" &&
+      category !== "sem vagas" &&
+      category !== "com vagas";
+  });
+
+  const isShelter = point.description === "Abrigo";
+
   // Tratamento do número para WhatsApp
   const cleanPhone = point.phone.replace(/\D/g, '');
   const whatsappNumber = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
+
+  async function shareStoryImage(point) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080;
+    canvas.height = 1920;
+
+    const ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0, 0, 1080, 1920);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 80px Arial";
+    ctx.fillText("AjudeJF", 350, 200);
+
+    ctx.font = "50px Arial";
+    ctx.fillText(point.name, 200, 500);
+
+    ctx.font = "40px Arial";
+    ctx.fillText("Precisa de:", 200, 650);
+
+    let y = 750;
+    point.needs.forEach(n => {
+      ctx.fillText(`• ${n.category}`, 200, y);
+      y += 80;
+    });
+
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], "story-ajudejf.png", { type: "image/png" });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "AjudeJF"
+        });
+      }
+    });
+  }
 
   const copyToClipboard = async (text: string, description: string) => {
     try {
@@ -162,11 +219,13 @@ export default function CollectionPointCard({ point }: Props) {
           </div>
         )}
 
+        
+
         {/* Needs Section */}
         <div className="border-t border-border pt-3 mt-3">
           <button onClick={() => setExpanded(!expanded)} className="flex items-center justify-between w-full text-left">
             <p className="text-xs font-bold text-foreground">
-              Necessidades Atuais ({activeNeeds.length})
+              Necessidades Atuais ({regularNeeds.length})
             </p>
             {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
           </button>
@@ -190,8 +249,8 @@ export default function CollectionPointCard({ point }: Props) {
 
           {expanded && (
             <div className="flex flex-wrap gap-2 mt-3">
-              {activeNeeds.length > 0 ? (
-                activeNeeds.map(need => (
+              {regularNeeds.length > 0 ? (
+                regularNeeds.map(need => (
                   <NeedBadge
                     key={need.id}
                     urgency={need.urgency}
@@ -217,6 +276,21 @@ export default function CollectionPointCard({ point }: Props) {
           Abrir no Google Maps
         </a>
       </div>
+
+      <div className="px-4 pb-4">
+        <button
+          onClick={shareStoryImage.bind(null, point)}
+          className="flex items-center justify-center gap-2 w-full 
+               bg-gradient-to-r from-pink-500 to-purple-600 
+               text-white text-sm font-semibold 
+               py-2.5 px-4 rounded-lg 
+               hover:opacity-90 transition-opacity"
+        >
+          <Share2 className="w-4 h-4" />
+          Compartilhar no Instagram
+        </button>
+      </div>
+
     </div>
   );
 }
